@@ -17,14 +17,14 @@ program HartreeFock
 
      ! Variable naming as in the description of the exercise
      integer  :: n_AO, n_occ, it
-     integer  :: kappa, lambda, mu, nu
+     integer  :: kappa, lambda
      real(8)  :: E_HF_1, E_HF_2, treshold
-     real(8), allocatable :: F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:), D(:,:)!, Fn_1(:,:)
+     real(8), allocatable :: F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:), D(:,:), H_core(:,:)
 
      ! The following large array can be eliminated when Fock matrix contruction is implemented
      real(8), allocatable :: ao_integrals (:,:,:,:)
 
-     treshold = 0.00000001
+     treshold = 1e-9
      E_HF_1   = 1
      E_HF_2   = 0
      it       = 0
@@ -57,8 +57,10 @@ program HartreeFock
 
      ! Compute the core Hamiltonian matrix (the potential is positive, we scale with -e = -1 to get to the potential energy matrix)
      allocate (F(n_AO,n_AO))
-     F = T - V
-     write (*,'(3f15.5)') F
+     allocate (H_core(n_AO,n_AO))
+     H_core = T - V
+     print *, 'Core Hamiltonian matrix:'
+     write (*,'(3f15.5)') H_core
      allocate (D(n_AO,n_AO))
 
      ! Diagonalize the core hamiltonian, creating a dummy set of coefficients
@@ -71,7 +73,7 @@ program HartreeFock
       do
          if (abs(E_HF_2 - E_HF_1) < treshold) then
            exit
-         else if (it > 3000) then
+         else if (it > 100) then
          exit
          else
             it = it +1
@@ -89,34 +91,19 @@ program HartreeFock
            !Create the Fock matrix with hcore and 2-electron integrals
             do lambda = 1, n_AO
               do kappa = 1, n_AO
-                do mu   = 1, n_AO
-                  do nu  = 1, n_AO
-             F(kappa,lambda) = F(kappa,lambda) + 2.D0 * ao_integrals(kappa,lambda,mu,nu) * D(mu,nu)
-             F(kappa,lambda) = F (kappa, lambda) - 1.D0 * ao_integrals(kappa,nu,mu,lambda)* D(mu,nu)
-                  end do
-                end do
+             F = H_core + 2.D0 * ao_integrals(:,:,kappa,lambda) * D
+             F = F - 1.D0 * ao_integrals(:,lambda,kappa,:)* D
               end do
             end do
-            write (*,'(3f15.5)') F
-            ! Diagonalize the Fock matrix
-            call solve_genev (F,S,C,eps)
-            do lambda = 1, n_ao
-              do kappa = 1, n_ao
-                E_HF_2 = E_HF_2 + 2.D0 *  D(kappa,lambda) * sum(D*ao_integrals(:,:,kappa,lambda))
-                E_HF_2 = E_HF_2 - 1.D0 *  D(kappa,lambda) * sum(D*ao_integrals(:,lambda,kappa,:))
-              end do
-           end do
-          
+            ! Compute the Hartree-Fock energy
+                E_HF_2 = sum((H_core+F)*D)
+           ! Diagonalize the Fock matrix
+           call solve_genev (F,S,C,eps)
           end if
-       end do
-
-
-     ! Compute the Hartree-Fock energy (this should be modified, see the notes)
-     !E_HF = 2.D0 * sum(F*D)
-    
-   
+       end do 
+     
      print*, "The Hartree-Fock energy:    ", E_HF_2
-
+     print*, 'The energy was found after', it, 'iterations'  
    end
    subroutine define_molecule(molecule)
      ! This routine should be improved such that an arbitrary molecule can be given as input
