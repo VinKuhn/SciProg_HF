@@ -77,25 +77,25 @@ program HartreeFock
          exit
          else
             it = it +1
-            ! Form the density matrix
+           ! Form the density matrix
      
             do lambda = 1, n_ao
              do kappa = 1, n_ao
-              D(kappa,lambda) = sum(C(kappa,1:n_occ)*C(lambda,1:n_occ))
+               D(kappa,lambda) = sum(C(kappa,1:n_occ)*C(lambda,1:n_occ))
              end do
             end do
 
-            ! Saving the Hartree Fock energy of the previous iteration
+           ! Saving the Hartree Fock energy of the previous iteration
             E_HF_1 = E_HF_2
 
            !Create the Fock matrix with hcore and 2-electron integrals
             do lambda = 1, n_AO
               do kappa = 1, n_AO
-             F = H_core + 2.D0 * ao_integrals(:,:,kappa,lambda) * D
-             F = F - 1.D0 * ao_integrals(:,lambda,kappa,:)* D
+                F = H_core + 2.D0 * ao_integrals(:,:,kappa,lambda) * D
+                F = F - 1.D0 * ao_integrals(:,lambda,kappa,:)* D
               end do
             end do
-            ! Compute the Hartree-Fock energy
+           ! Compute the Hartree-Fock energy
                 E_HF_2 = sum((H_core+F)*D)
            ! Diagonalize the Fock matrix
            call solve_genev (F,S,C,eps)
