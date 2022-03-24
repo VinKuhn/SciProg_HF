@@ -110,12 +110,18 @@ program HartreeFock
      ! the coordinates below are for a be-he dimer oriented along the x-axis with a bond length of 2 au
      use molecular_structure
      type(molecular_structure_t), intent(inout) :: molecule
-     real(8) :: charge(2),coord(3,2)
-     charge(1)   = 4.D0
-     charge(2)   = 2.D0
-     coord       = 0.D0
-     coord(1,2)  = 2.D0
-     call add_atoms_to_molecule(molecule,charge,coord)
+     real(8), allocatable :: charge(:),coord(:,:)
+     INTEGER              :: n, i
+     i = 1
+     n = 1
+     open(6, file='molecule.txt')
+     read(6,*)  n
+     allocate(charge(n))
+     allocate(coord(3,n))
+    do i = 1, size(charge)
+       read(6,*) charge(i), coord(1,i), coord(2,i), coord(3,i)
+    end do
+    call add_atoms_to_molecule(molecule,charge,coord)
    end subroutine
 
    subroutine define_basis(ao_basis)
