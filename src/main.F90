@@ -16,13 +16,18 @@ program HartreeFock
      type(basis_set_info_t) :: ao_basis
 
      ! Variable naming as in the description of the exercise
-     integer  :: n_AO, n_occ
-     integer  :: kappa, lambda
-     real(8)  :: E_HF
-     real(8), allocatable :: F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:), D(:,:)
+     integer  :: n_AO, n_occ, it
+     integer  :: kappa, lambda, mu, nu
+     real(8)  :: E_HF_1, E_HF_2, treshold
+     real(8), allocatable :: F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:), D(:,:)!, Fn_1(:,:)
 
      ! The following large array can be eliminated when Fock matrix contruction is implemented
      real(8), allocatable :: ao_integrals (:,:,:,:)
+
+     treshold = 0.00000001
+     E_HF_1   = 1
+     E_HF_2   = 0
+     it       = 0
    
      ! Definition of the molecule
      call define_molecule(molecule)
@@ -45,41 +50,74 @@ program HartreeFock
      ! Compute the potential matrix
      allocate (V(n_AO,n_AO))
      call   compute_1e_integrals ("POT",ao_basis,ao_basis,V,molecule)
+     
+     ! Calculating the atom orbital integrals
+     allocate (ao_integrals(n_AO,n_AO,n_AO,n_AO))
+     call generate_2int (ao_basis,ao_integrals)
 
      ! Compute the core Hamiltonian matrix (the potential is positive, we scale with -e = -1 to get to the potential energy matrix)
      allocate (F(n_AO,n_AO))
      F = T - V
+     write (*,'(3f15.5)') F
+     allocate (D(n_AO,n_AO))
 
-     ! Diagonalize the Fock matrix
+     ! Diagonalize the core hamiltonian, creating a dummy set of coefficients
      allocate (C(n_AO,n_AO))
      allocate (eps(n_AO))
      call solve_genev (F,S,C,eps)
      print*, "Orbital energies for the core Hamiltonian:",eps
 
-     ! Form the density matrix
-     allocate (D(n_AO,n_AO))
-     do lambda = 1, n_ao
-        do kappa = 1, n_ao
-           D(kappa,lambda) = 2.D0 * sum(C(kappa,1:n_occ)*C(lambda,1:n_occ))
+     
+      do
+         if (abs(E_HF_2 - E_HF_1) < treshold) then
+           exit
+         else if (it > 3000) then
+         exit
+         else
+            it = it +1
+            ! Form the density matrix
+     
+            do lambda = 1, n_ao
+             do kappa = 1, n_ao
+              D(kappa,lambda) = sum(C(kappa,1:n_occ)*C(lambda,1:n_occ))
+             end do
+            end do
+
+            ! Saving the Hartree Fock energy of the previous iteration
+            E_HF_1 = E_HF_2
+
+           !Create the Fock matrix with hcore and 2-electron integrals
+            do lambda = 1, n_AO
+              do kappa = 1, n_AO
+                do mu   = 1, n_AO
+                  do nu  = 1, n_AO
+             F(kappa,lambda) = F(kappa,lambda) + 2.D0 * ao_integrals(kappa,lambda,mu,nu) * D(mu,nu)
+             F(kappa,lambda) = F (kappa, lambda) - 1.D0 * ao_integrals(kappa,nu,mu,lambda)* D(mu,nu)
+                  end do
+                end do
+              end do
+            end do
+            write (*,'(3f15.5)') F
+            ! Diagonalize the Fock matrix
+            call solve_genev (F,S,C,eps)
+            do lambda = 1, n_ao
+              do kappa = 1, n_ao
+                E_HF_2 = E_HF_2 + 2.D0 *  D(kappa,lambda) * sum(D*ao_integrals(:,:,kappa,lambda))
+                E_HF_2 = E_HF_2 - 1.D0 *  D(kappa,lambda) * sum(D*ao_integrals(:,lambda,kappa,:))
+              end do
+           end do
+          
+          end if
        end do
-     end do
+
 
      ! Compute the Hartree-Fock energy (this should be modified, see the notes)
-     E_HF = sum(F*D)
-     allocate (ao_integrals(n_AO,n_AO,n_AO,n_AO))
-     ! Compute all 2-electron integrals
-     call generate_2int (ao_basis,ao_integrals)
-     do lambda = 1, n_ao
-        do kappa = 1, n_ao
-           E_HF = E_HF + 0.5D0 * D(kappa,lambda) * sum(D*ao_integrals(:,:,kappa,lambda))
-           E_HF = E_HF - 0.25D0 * D(kappa,lambda) * sum(D*ao_integrals(:,lambda,kappa,:))
-       end do
-     end do
+     !E_HF = 2.D0 * sum(F*D)
+    
    
-     print*, "The Hartree-Fock energy:    ", E_HF
+     print*, "The Hartree-Fock energy:    ", E_HF_2
 
    end
-
    subroutine define_molecule(molecule)
      ! This routine should be improved such that an arbitrary molecule can be given as input
      ! the coordinates below are for a be-he dimer oriented along the x-axis with a bond length of 2 au
