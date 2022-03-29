@@ -10,6 +10,7 @@
 !       Molecule:
         type, public:: molecular_structure_t
          integer:: num_atoms=0                    ! number of atoms
+         integer:: mol_charge=0                   ! molecular charge
          real(REALD), allocatable :: charge(:)    ! nuclear charges
          real(REALD), allocatable :: coord(:,:)   ! coordinates of the atoms
         end type molecular_structure_t
