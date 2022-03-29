@@ -59,8 +59,6 @@ program HartreeFock
      allocate (F(n_AO,n_AO))
      allocate (H_core(n_AO,n_AO))
      H_core = T - V
-     print *, 'Core Hamiltonian matrix:'
-     write (*,'(3f15.5)') H_core
      allocate (D(n_AO,n_AO))
 
      ! Diagonalize the core hamiltonian, creating a dummy set of coefficients
