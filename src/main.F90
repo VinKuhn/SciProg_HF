@@ -37,7 +37,7 @@ program HartreeFock
      n_AO = ao_basis%nao
    
      ! Definition of the number of occupied orbitals
-     n_occ = 3 ! hardwired for this demonstration program, should be set via input
+     n_occ = 0.5D0 *(sum(molecule%charge)-molecule%mol_charge)
 
      ! Compute the overlap matrix
      allocate (S(n_AO,n_AO))
