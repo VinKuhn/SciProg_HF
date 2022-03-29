@@ -33,7 +33,7 @@ program HartreeFock
      call define_molecule(molecule)
 
      ! Definition of the GTOs
-     call define_basis(ao_basis)
+     call define_basis(ao_basis, molecule)
      n_AO = ao_basis%nao
    
      ! Definition of the number of occupied orbitals
