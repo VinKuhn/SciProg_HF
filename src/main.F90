@@ -111,14 +111,14 @@ program HartreeFock
      use molecular_structure
      type(molecular_structure_t), intent(inout) :: molecule
      real(8), allocatable :: charge(:),coord(:,:)
-     INTEGER              :: n, i
+     INTEGER              :: n_atoms, i
      i = 1
-     n = 1
+     n_atoms = 1
      open(11, file='molecule.xyz')
-     read(11,*)  n
-     allocate(charge(n))
-     allocate(coord(3,n))
-    do i = 1, n
+     read(11,*)  n_atoms, molecule%mol_charge
+     allocate(charge(n_atoms))
+     allocate(coord(3,n_atoms))
+    do i = 1, n_atoms
        read(11,*) charge(i), coord(:,i)
     end do
     call add_atoms_to_molecule(molecule,charge,coord)
