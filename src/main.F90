@@ -105,7 +105,7 @@ program HartreeFock
      print*, "The Hartree-Fock energy:    ", E_HF_2
      print*, 'The energy was found after', it, 'iterations'  
    end
-   subroutine define_molecule(molecule)
+    subroutine define_molecule(molecule)
      ! This routine should be improved such that an arbitrary molecule can be given as input
      ! the coordinates below are for a be-he dimer oriented along the x-axis with a bond length of 2 au
      use molecular_structure
@@ -114,12 +114,12 @@ program HartreeFock
      INTEGER              :: n, i
      i = 1
      n = 1
-     open(6, file='molecule.txt')
-     read(6,*)  n
+     open(11, file='molecule.xyz')
+     read(11,*)  n
      allocate(charge(n))
      allocate(coord(3,n))
-    do i = 1, size(charge)
-       read(6,*) charge(i), coord(1,i), coord(2,i), coord(3,i)
+    do i = 1, n
+       read(11,*) charge(i), coord(:,i)
     end do
     call add_atoms_to_molecule(molecule,charge,coord)
    end subroutine
@@ -131,11 +131,31 @@ program HartreeFock
      use ao_basis
      type(basis_set_info_t), intent(inout) :: ao_basis
      type(basis_func_info_t) :: gto
-     ! Be:  2 uncontracted s-funs:    l      coord          exp      
-     call add_shell_to_basis(ao_basis,0,(/0.D0,0.D0,0.D0/),4.D0)
-     call add_shell_to_basis(ao_basis,0,(/0.D0,0.D0,0.D0/),1.D0)
-     ! He:  1 uncontracted s-fun:     l      coord          exp      
-     call add_shell_to_basis(ao_basis,0,(/2.D0,0.D0,0.D0/),1.D0)
-   end subroutine
 
-   
+     do i = 1, molecule%num_atoms
+      if (molecule%charge(i) = 1) then
+     ! H:  3 uncontracted s-funs:    l      coord          exp      
+       call add_shell_to_basis(ao_basis,0,molecule%coord(:,i),0.1.D0)
+       call add_shell_to_basis(ao_basis,0,molecule%coord(:,i),1.D0)
+       call add_shell_to_basis(ao_basis,0,molecule%coord(:,i),3.D0)
+     
+      else if (molecule%charge(i) > 1) then
+     ! Non-Hydrogen: 5 uncontra. s-fun: l      coord          exp 
+       call add_shell_to_basis(ao_basis,0,molecule%coord(:,i),0.1.D0)
+       call add_shell_to_basis(ao_basis,0,molecule%coord(:,i),0.35.D0)
+       call add_shell_to_basis(ao_basis,0,molecule%coord(:,i),1.D0)
+       call add_shell_to_basis(ao_basis,0,molecule%coord(:,i),3.D0)
+       call add_shell_to_basis(ao_basis,0,molecule%coord(:,i),10.D0)
+
+      ! Non-Hydrogen: 3 uncontra. p-fun: l      coord          exp 
+       call add_shell_to_basis(ao_basis,1,molecule%coord(:,i),0.1.D0)
+       call add_shell_to_basis(ao_basis,1,molecule%coord(:,i),1.D0)
+       call add_shell_to_basis(ao_basis,1,molecule%coord(:,i),3.D0)
+
+      ! Non-Hydrogen: 1 uncontra. d-fun: l      coord          exp 
+       call add_shell_to_basis(ao_basis,2,molecule%coord(:,i),1.D0)
+      end if
+    end do
+     
+
+   end subroutine
