@@ -21,16 +21,16 @@ The input file has to be named molecule.xyz and provided within the projects fol
 The x, y and z coordinates have to be provided in atomic units
 Formatting of the input is as follows:
 
-n_atoms        molecular_charge
-nuclear_charge1      x             y            z
-nuclear_charge2      x             y            z
+*n_atoms        molecular_charge
+*nuclear_charge1      x             y            z
+*nuclear_charge2      x             y            z
       .              .             .            .
       .              .             .            .
 Following that scheme the input for a He-He molecule with a distance of 2 a.u. would look as follows:
 
-2 0
-2 0 0 0
-2 2 0 0
+*2 0
+*2 0 0 0
+*2 2 0 0
 
 !Please note, that reasonable results will only be achhieved for molecules with an even number of electrons (restricted HF)
 
