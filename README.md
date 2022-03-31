@@ -8,7 +8,7 @@ Hartree Fock program for calculations with the restricted Hartree-Fock model cod
 * [Functionality](#functionality)
 
 ## Introduction
-This project was based on a provided skeleton HF program provided by Luuk Visscher, that used only a limited set of base functions for a preset Be-He molecule. The incentive was to extend the program to accept input for any molecule and also implement the iterative process to create the Fock matrix. 
+This project was based on a provided skeleton HF program by Luuk Visscher, that used only a limited set of base functions for a preset Be-He molecule. The incentive was to extend the program to accept input for any molecule and also implement the iterative process to create the Fock matrix. 
 
 ## General info
 Project is created with:
