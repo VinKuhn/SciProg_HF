@@ -2,6 +2,7 @@ program HartreeFock
 
    ! Demonstration program that can be used as a starting point
    ! Lucas Visscher, March 2022
+   ! Modified by Kevin Kuhn, March 2022
 
    use molecular_structure
    use ao_basis
@@ -59,15 +60,16 @@ program HartreeFock
      allocate (F(n_AO,n_AO))
      allocate (H_core(n_AO,n_AO))
      H_core = T - V
+     F = H_core
      allocate (D(n_AO,n_AO))
 
      ! Diagonalize the core hamiltonian, creating a dummy set of coefficients
      allocate (C(n_AO,n_AO))
      allocate (eps(n_AO))
      call solve_genev (F,S,C,eps)
-     print*, "Orbital energies for the core Hamiltonian:",eps
-
      
+
+     ! Iteration Process to create the correct Fock matrix
       do
          if (abs(E_HF_2 - E_HF_1) < treshold) then
            exit
@@ -130,8 +132,7 @@ program HartreeFock
      use molecular_structure
      type(basis_set_info_t), intent(inout) :: ao_basis
      type(molecular_structure_t), intent(in) :: molecule
-     type(basis_func_info_t) :: gto
-
+   
      do i = 1, molecule%num_atoms
       if (molecule%charge(i) == 1) then
      ! H:  3 uncontracted s-funs:    l      coord          exp      
